@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>節約ガード - 浪費防止アプリ</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #059669;
+      --success-bg: #dcfce7;
+      --danger: #dc2626;
+      --danger-bg: #fee2e2;
+      --border: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding-bottom: 40px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    header {
+      background-color: #0f172a;
+      color: white;
+      padding: 16px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .savings-banner {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: white;
+      margin: 16px;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.2);
+    }
+
+    .savings-label {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      font-weight: 500;
+    }
+
+    .savings-amount {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    .action-container {
+      padding: 0 16px;
+      margin-bottom: 16px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+
+    .btn-primary:active {
+      background-color: var(--primary-hover);
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid var(--border);
+      margin: 0 16px 16px 16px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      padding: 12px 0;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: var(--primary);
+    }
+
+    .list-container {
+      padding: 0 16px;
+    }
+
+    .item-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+
+    .item-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text-main);
+    }
+
+    .item-price {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--primary);
+    }
+
+    .item-reason {
+      font-size: 0.825rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      background-color: #f1f5f9;
+      padding: 6px 10px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 8px;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 10px;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-pass {
+      background-color: var(--success-bg);
+      color: var(--success);
+    }
+
+    .btn-buy {
+      background-color: var(--danger-bg);
+      color: var(--danger);
+    }
+
+    .btn-restore {
+      background-color: #f1f5f9;
+      color: var(--text-muted);
+    }
+
+    .btn-delete {
+      background-color: transparent;
+      color: #94a3b8;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 440px;
+      padding: 20px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .chip {
+      padding: 6px 12px;
+      background-color: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .chip.selected {
+      background-color: #dbeafe;
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .modal-buttons button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-cancel {
+      background-color: #f1f5f9;
+      color: var(--text-muted);
+    }
+
+    .btn-submit {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🛡️ 節約ガード</h1>
+  </header>
+
+  <div class="savings-banner">
+    <div class="savings-label">🎉 これまでの通算節約額</div>
+    <div class="savings-amount" id="totalSavings">¥0</div>
+  </div>
+
+  <div class="action-container">
+    <button class="btn-primary" onclick="openAddModal()">＋ 新しく欲しいものを登録</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('pending')" id="tab-pending">検討中 (0)</button>
+    <button class="tab-btn" onclick="switchTab('passed')" id="tab-passed">見送り (0)</button>
+    <button class="tab-btn" onclick="switchTab('bought')" id="tab-bought">購入済 (0)</button>
+  </div>
+
+  <div class="list-container" id="itemList">
+    <!-- Items render here -->
+  </div>
+
+  <!-- Modal: Add Item -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <div class="modal-title">欲しいものを追加</div>
+      <form id="addForm" onsubmit="handleAddItem(event)">
+        <div class="form-group">
+          <label for="itemName">品名 *</label>
+          <input type="text" id="itemName" class="form-control" placeholder="例: ワイヤレスイヤホン" required>
+        </div>
+
+        <div class="form-group">
+          <label for="itemPrice">金額 (円) *</label>
+          <input type="number" id="itemPrice" class="form-control" placeholder="例: 12800" required>
+        </div>
+
+        <div class="form-group">
+          <label>買いたい理由</label>
+          <div class="chip-group" id="buyReasonChips">
+            <div class="chip" onclick="selectChip('buyReason', '必要だから')">必要だから</div>
+            <div class="chip" onclick="selectChip('buyReason', '限定品だから')">限定品だから</div>
+            <div class="chip" onclick="selectChip('buyReason', '記念だから')">記念だから</div>
+            <div class="chip" onclick="selectChip('buyReason', '自分へのご褒美')">自分へのご褒美</div>
+            <div class="chip" onclick="selectChip('buyReason', '習慣化している')">習慣化している</div>
+            <div class="chip" onclick="selectChip('buyReason', '何となく欲しい')">何となく欲しい</div>
+            <div class="chip" onclick="selectChip('buyReason', 'その他')">その他</div>
+          </div>
+          <input type="text" id="buyReasonCustom" class="form-control" placeholder="理由を手動入力" style="display:none;">
+        </div>
+
+        <div class="form-group">
+          <label>保存先</label>
+          <select id="initialStatus" class="form-control" onchange="toggleDirectPassFields()">
+            <option value="pending">検討リストへ追加</option>
+            <option value="passed">直接見送りリストへ追加</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="passReasonGroup" style="display:none;">
+          <label>思いとどまった理由</label>
+          <div class="chip-group" id="passReasonChips">
+            <div class="chip" onclick="selectChip('passReason', '一時の感情だった')">一時の感情だった</div>
+            <div class="chip" onclick="selectChip('passReason', '代替品がある')">代替品がある</div>
+            <div class="chip" onclick="selectChip('passReason', '予算オーバー')">予算オーバー</div>
+            <div class="chip" onclick="selectChip('passReason', '今じゃなくていい')">今じゃなくていい</div>
+            <div class="chip" onclick="selectChip('passReason', 'その他')">その他</div>
+          </div>
+          <input type="text" id="passReasonCustom" class="form-control" placeholder="思いとどまった理由を手動入力" style="display:none;">
+        </div>
+
+        <div class="modal-buttons">
+          <button type="button" class="btn-cancel" onclick="closeAddModal()">キャンセル</button>
+          <button type="submit" class="btn-submit">登録する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Pass Item Reason -->
+  <div class="modal-overlay" id="passModal">
+    <div class="modal">
+      <div class="modal-title">見送りの理由</div>
+      <form id="passForm" onsubmit="handlePassItem(event)">
+        <input type="hidden" id="passItemId">
+        <div class="form-group">
+          <label>思いとどまった理由を選択</label>
+          <div class="chip-group" id="actionPassReasonChips">
+            <div class="chip" onclick="selectChip('actionPassReason', '一時の感情だった')">一時の感情だった</div>
+            <div class="chip" onclick="selectChip('actionPassReason', '代替品がある')">代替品がある</div>
+            <div class="chip" onclick="selectChip('actionPassReason', '予算オーバー')">予算オーバー</div>
+            <div class="chip" onclick="selectChip('actionPassReason', '今じゃなくていい')">今じゃなくていい</div>
+            <div class="chip" onclick="selectChip('actionPassReason', 'その他')">その他</div>
+          </div>
+          <input type="text" id="actionPassReasonCustom" class="form-control" placeholder="理由を手動入力" style="display:none;">
+        </div>
+
+        <div class="modal-buttons">
+          <button type="button" class="btn-cancel" onclick="closePassModal()">キャンセル</button>
+          <button type="submit" class="btn-submit" style="background-color: var(--success);">見送りに確定</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let items = JSON.parse(localStorage.getItem('savings_app_items') || '[]');
+    let currentTab = 'pending';
+    let selectedBuyReason = '';
+    let selectedPassReason = '';
+    let selectedActionPassReason = '';
+
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err));
+    }
+
+    function saveData() {
+      localStorage.setItem('savings_app_items', JSON.stringify(items));
+      render();
+    }
+
+    function render() {
+      // Calculate savings
+      const totalSavings = items
+        .filter(item => item.status === 'passed')
+        .reduce((sum, item) => sum + Number(item.price), 0);
+      document.getElementById('totalSavings').innerText = '¥' + totalSavings.toLocaleString();
+
+      // Counts
+      const pendingCount = items.filter(i => i.status === 'pending').length;
+      const passedCount = items.filter(i => i.status === 'passed').length;
+      const boughtCount = items.filter(i => i.status === 'bought').length;
+
+      document.getElementById('tab-pending').innerText = `検討中 (${pendingCount})`;
+      document.getElementById('tab-passed').innerText = `見送り (${passedCount})`;
+      document.getElementById('tab-bought').innerText = `購入済 (${boughtCount})`;
+
+      // Render List
+      const filtered = items.filter(item => item.status === currentTab);
+      const container = document.getElementById('itemList');
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-state">該当するアイテムはありません</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => `
+        <div class="item-card">
+          <div class="item-header">
+            <span class="item-title">${escapeHtml(item.name)}</span>
+            <span class="item-price">¥${Number(item.price).toLocaleString()}</span>
+          </div>
+          ${item.buyReason ? `<div class="item-reason">買いたい理由: ${escapeHtml(item.buyReason)}</div>` : ''}
+          ${item.passReason ? `<div class="item-reason" style="background:#dcfce7; color:#166534;">見送り理由: ${escapeHtml(item.passReason)}</div>` : ''}
+          <div class="item-actions">
+            ${currentTab === 'pending' ? `
+              <button class="btn-sm btn-pass" onclick="openPassModal('${item.id}')">見送る</button>
+              <button class="btn-sm btn-buy" onclick="changeStatus('${item.id}', 'bought')">買う</button>
+            ` : `
+              <button class="btn-sm btn-restore" onclick="changeStatus('${item.id}', 'pending')">検討に戻す</button>
+            `}
+            <button class="btn-sm btn-delete" onclick="deleteItem('${item.id}')">削除</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      render();
+    }
+
+    function openAddModal() {
+      document.getElementById('addModal').classList.add('active');
+    }
+
+    function closeAddModal() {
+      document.getElementById('addModal').classList.remove('active');
+      document.getElementById('addForm').reset();
+      resetChips();
+    }
+
+    function openPassModal(id) {
+      document.getElementById('passItemId').value = id;
+      document.getElementById('passModal').classList.add('active');
+    }
+
+    function closePassModal() {
+      document.getElementById('passModal').classList.remove('active');
+      document.getElementById('passForm').reset();
+      resetChips();
+    }
+
+    function selectChip(type, value) {
+      const container = document.getElementById(`${type}Chips`);
+      container.querySelectorAll('.chip').forEach(c => {
+        if (c.innerText === value) c.classList.add('selected');
+        else c.classList.remove('selected');
+      });
+
+      const customInput = document.getElementById(`${type}Custom`);
+      if (value === 'その他') {
+        customInput.style.display = 'block';
+        customInput.focus();
+      } else {
+        customInput.style.display = 'none';
+      }
+
+      if (type === 'buyReason') selectedBuyReason = value;
+      if (type === 'passReason') selectedPassReason = value;
+      if (type === 'actionPassReason') selectedActionPassReason = value;
+    }
+
+    function resetChips() {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+      document.querySelectorAll('[id$="Custom"]').forEach(i => i.style.display = 'none');
+      selectedBuyReason = '';
+      selectedPassReason = '';
+      selectedActionPassReason = '';
+    }
+
+    function toggleDirectPassFields() {
+      const status = document.getElementById('initialStatus').value;
+      document.getElementById('passReasonGroup').style.display = status === 'passed' ? 'block' : 'none';
+    }
+
+    function handleAddItem(e) {
+      e.preventDefault();
+      const name = document.getElementById('itemName').value;
+      const price = document.getElementById('itemPrice').value;
+      const status = document.getElementById('initialStatus').value;
+
+      let buyReason = selectedBuyReason;
+      if (buyReason === 'その他') {
+        buyReason = document.getElementById('buyReasonCustom').value || 'その他';
+      }
+
+      let passReason = '';
+      if (status === 'passed') {
+        passReason = selectedPassReason;
+        if (passReason === 'その他') {
+          passReason = document.getElementById('passReasonCustom').value || 'その他';
+        }
+      }
+
+      items.push({
+        id: Date.now().toString(),
+        name,
+        price,
+        buyReason,
+        passReason,
+        status,
+        createdAt: new Date().toISOString()
+      });
+
+      saveData();
+      closeAddModal();
+    }
+
+    function handlePassItem(e) {
+      e.preventDefault();
+      const id = document.getElementById('passItemId').value;
+      let passReason = selectedActionPassReason;
+      if (passReason === 'その他') {
+        passReason = document.getElementById('actionPassReasonCustom').value || 'その他';
+      }
+
+      const item = items.find(i => i.id === id);
+      if (item) {
+        item.status = 'passed';
+        item.passReason = passReason;
+        saveData();
+      }
+
+      closePassModal();
+    }
+
+    function changeStatus(id, newStatus) {
+      const item = items.find(i => i.id === id);
+      if (item) {
+        item.status = newStatus;
+        saveData();
+      }
+    }
+
+    function deleteItem(id) {
+      if (confirm('この項目を削除しますか？')) {
+        items = items.filter(i => i.id !== id);
+        saveData();
+      }
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[m]);
+    }
+
+    // Initial render
+    render();
+  </script>
+</body>
+</html>
